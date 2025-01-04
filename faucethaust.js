@@ -9,10 +9,7 @@ const API_URL = 'https://faucet-test.haust.network/api/claim';
 
 // Function to claim faucet for a single address
 async function claimFaucet(address) {
-    const maxRetries = 5; // Maximum attempts per address
-    let attempts = 0;
-
-    while (attempts < maxRetries) {
+    while (true) {
         try {
             console.log(`Attempting to claim for: ${address}`);
             const response = await axios.post(API_URL, { address });
@@ -20,13 +17,8 @@ async function claimFaucet(address) {
             // Log the status message
             console.log(`Address: ${address} | Status: ${response.data.message}`);
 
-            // Check if claim was successful
-            if (response.data.message && response.data.message.includes('success')) {
-                console.log(`Claim successful for ${address}!`);
-                return; // Exit function on success
-            } else {
-                console.log(`Retrying for ${address}...`);
-            }
+            // Wait for 5 seconds before the next attempt
+            await new Promise(resolve => setTimeout(resolve, 5000));
         } catch (error) {
             console.error(`Address: ${address} | Error: ${error.response?.data?.message || error.message}`);
             console.log('Retrying...');
@@ -34,22 +26,20 @@ async function claimFaucet(address) {
 
         // Wait for 5 seconds before retrying
         await new Promise(resolve => setTimeout(resolve, 5000));
-        attempts++;
     }
-
-    console.log(`Failed to claim for ${address} after ${maxRetries} attempts.`);
 }
 
-// Main function to process all addresses
+// Main function to process all addresses continuously
 async function main() {
-    console.log('Starting auto claim script...');
-    for (const address of addresses) {
-        await claimFaucet(address);
-        // Optional: Wait before processing the next address
-        console.log('Waiting 10 seconds before processing the next address...');
-        await new Promise(resolve => setTimeout(resolve, 10000));
+    console.log('Starting infinite auto claim script...');
+    while (true) {
+        for (const address of addresses) {
+            await claimFaucet(address);
+            // Optional: Wait before processing the next address
+            console.log('Waiting 10 seconds before processing the next address...');
+            await new Promise(resolve => setTimeout(resolve, 10000));
+        }
     }
-    console.log('All claims completed.');
 }
 
 main();
