@@ -9,18 +9,21 @@ const API_URL = 'https://faucet-test.haust.network/api/claim';
 
 // Function to claim faucet for a single address
 async function claimFaucet(address) {
-    while (true) {
+    const maxRetries = 5; // Maximum attempts per address
+    let attempts = 0;
+
+    while (attempts < maxRetries) {
         try {
             console.log(`Attempting to claim for: ${address}`);
             const response = await axios.post(API_URL, { address });
-            
+
             // Log the status message
             console.log(`Address: ${address} | Status: ${response.data.message}`);
-            
+
             // Check if claim was successful
             if (response.data.message && response.data.message.includes('success')) {
                 console.log(`Claim successful for ${address}!`);
-                break; // Exit loop on success
+                return; // Exit function on success
             } else {
                 console.log(`Retrying for ${address}...`);
             }
@@ -31,7 +34,10 @@ async function claimFaucet(address) {
 
         // Wait for 5 seconds before retrying
         await new Promise(resolve => setTimeout(resolve, 5000));
+        attempts++;
     }
+
+    console.log(`Failed to claim for ${address} after ${maxRetries} attempts.`);
 }
 
 // Main function to process all addresses
